@@ -1,0 +1,330 @@
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+import warnings
+warnings.filterwarnings("ignore")
+
+stress = pd.read_csv("/content/drive/MyDrive/Sleep_health_and_lifestyle_dataset.csv")
+
+stress.head()
+
+# @title BMI Category
+
+from matplotlib import pyplot as plt
+import seaborn as sns
+stress.groupby('BMI Category').size().plot(kind='barh', color=sns.palettes.mpl_palette('Dark2'))
+plt.gca().spines[['top', 'right',]].set_visible(False)
+
+stress.info()
+
+stress.describe()
+
+stress.shape
+
+stress.isnull().sum()
+
+rows = stress[pd.isna(stress["Sleep Disorder"])]
+rows
+
+stress = stress.fillna("Nothing")
+stress.head(1)
+
+# @title Person ID vs Age
+
+from matplotlib import pyplot as plt
+stress.plot(kind='scatter', x='Person ID', y='Age', s=32, alpha=.8)
+plt.gca().spines[['top', 'right',]].set_visible(False)
+
+stress["BMI Category"] = stress["BMI Category"].replace("Normal Weight", "Normal")
+
+duplicate_rows = stress[stress.duplicated()]
+
+print("Duplicate Rows:")
+print(duplicate_rows)
+
+no_duplicates = stress.drop_duplicates(subset=['Person ID', 'Gender'])
+
+stress['Stress Level'].value_counts()
+
+dict = {}
+for i in list(stress.columns):
+    dict[i] = stress[i].value_counts().shape[0]
+
+pd.DataFrame(dict,index=["unique count"]).transpose()
+
+if '_df_13' not in globals():
+    print('_df_13 is not defined.')
+# Create a new DataFrame
+_df_13 = pd.DataFrame({'unique count': [1, 2, 3, 4, 5]})
+if 'unique count' not in _df_13.columns:
+    print('_df_13 does not contain a column named "unique count".')
+# Create a new column named "unique count"
+_df_13['unique count'] = [1, 2, 3, 4, 5]
+from matplotlib import pyplot as plt
+_df_13['unique count'].plot(kind='line', figsize=(8, 4), title='unique count')
+plt.gca().spines[['top', 'right']].set_visible(False)
+
+stress['Occupation'].unique()
+
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+
+label_encoder=LabelEncoder()
+
+cat_cols=['Gender','Occupation','BMI Category','Sleep Disorder']
+for col in cat_cols:
+    stress[col] = label_encoder.fit_transform(stress[col])
+
+stress.tail(2)
+
+stress[['Systolic BP', 'Diastolic BP']] = stress['Blood Pressure'].str.split('/', expand=True)
+
+# Convert the new columns to numeric type
+stress[['Systolic BP', 'Diastolic BP']] = stress[['Systolic BP', 'Diastolic BP']].apply(pd.to_numeric)
+
+# Drop the original 'Blood Pressure' column
+stress = stress.drop('Blood Pressure', axis=1)
+
+stress.head(1)
+
+# @title Person ID vs Quality of Sleep
+
+from matplotlib import pyplot as plt
+import seaborn as sns
+def _plot_series(series, series_name, series_index=0):
+  palette = list(sns.palettes.mpl_palette('Dark2'))
+  xs = series['Person ID']
+  ys = series['Quality of Sleep']
+
+  plt.plot(xs, ys, label=series_name, color=palette[series_index % len(palette)])
+
+fig, ax = plt.subplots(figsize=(10, 5.2), layout='constrained')
+df_sorted = stress.sort_values('Person ID', ascending=True)
+_plot_series(df_sorted, '')
+sns.despine(fig=fig, ax=ax)
+plt.xlabel('Person ID')
+_ = plt.ylabel('Quality of Sleep')
+
+stress.drop('Person ID', axis=1, inplace=True)
+
+stress_level_index = stress.columns.get_loc('Stress Level')
+
+columns = list(stress.columns[:stress_level_index]) + list(stress.columns[stress_level_index+1:]) + ['Stress Level']
+
+stress = stress[columns]
+stress.tail(1)
+
+stress['Occupation'].unique()
+
+sns.countplot(x='Stress Level', data=stress)
+
+plt.xlabel('Label')
+
+plt.ylabel('Count')
+
+plt.title('Distribution of the target variable')
+
+# Displaying the plot
+plt.show()
+
+stress.hist(figsize=(10, 8))
+plt.suptitle("Histograms of Numerical Features", fontsize=16)
+plt.show()
+
+fig = px.violin(stress, x='Heart Rate', y='Stress Level', title='Stress Distribution by Heart Rate', color_discrete_sequence=['#FFD700'])
+fig.update_layout(xaxis_title='Heart Rate', yaxis_title='Stress Level',width=600,height=500)
+fig.show()
+
+fig = px.pie(stress['Occupation'].value_counts(),
+              names=stress['Occupation'].value_counts().index,
+              title='Distribution of Occupation', width=600, height=500)
+fig.show()
+
+fig = px.box(stress, x='Stress Level', y='Occupation', title='Stress Level Distribution by Occupation', color_discrete_sequence=['lightgreen'])
+fig.update_layout(xaxis_title='Stress Level', yaxis_title='Occupation', width=600, height=500)
+fig.show()
+
+plt.figure(figsize = (10, 10))
+sns.heatmap(stress.corr(), cmap = 'crest', annot = True)
+plt.show
+
+stress.drop('Sleep Disorder', axis=1, inplace=True)
+stress.drop('Physical Activity Level', axis=1, inplace=True)
+stress.drop('Diastolic BP', axis=1, inplace=True)
+stress.drop('Quality of Sleep', axis=1, inplace=True)
+
+#Plot the heatmap
+plt.figure(figsize = (10, 10))
+sns.heatmap(stress.corr(), cmap = 'crest', annot = True)
+plt.show
+
+stress.head(1)
+
+from sklearn.model_selection import train_test_split    # For splitting data into training and testing sets
+from sklearn.metrics import confusion_matrix            # Import the confusion_matrix function for evaluating classification results
+from sklearn.metrics import classification_report       # Import the classification_report function for detailed classification metrics
+from sklearn.metrics import accuracy_score
+
+from sklearn.linear_model import LogisticRegression    
+from sklearn.ensemble import RandomForestClassifier    
+from sklearn.tree import DecisionTreeClassifier        
+from sklearn import svm                         
+from sklearn.naive_bayes import GaussianNB            
+from sklearn.neighbors import KNeighborsClassifier 
+
+# Split the data into features (X) and the target variable (y)
+X = stress.drop(['Stress Level'], axis=1)
+y = stress['Stress Level']
+
+# Split the data into training and testing sets (80% training, 20% testing)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Display the shapes of the training and testing sets
+print("X_train shape:", X_train.shape)
+print("y_train shape:", y_train.shape)
+print("X_test shape:", X_test.shape)
+print("y_test shape:", y_test.shape)
+
+X_train
+
+# Instantiating the object and fitting
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+# Predicting the values
+predicted = model.predict(X_test)
+
+# Confusion matrix
+conf = confusion_matrix(y_test, predicted)
+print("Confusion Matrix : \n", conf)
+
+cr = classification_report(y_test, predicted)
+print("Classification Report:\n", cr)
+
+# Printing the test accuracy
+print("The test accuracy of Logistic Regression is : ", accuracy_score(y_test, predicted) * 100, "%")
+
+naive_bayes = GaussianNB()
+naive_bayes.fit(X_train,y_train)
+
+naive_bayes.score(X_test,y_test)
+
+y_predict = naive_bayes.predict(X_test)
+
+matrix = confusion_matrix(y_test, y_predict)
+print("Confusion Matrix:")
+print(matrix)
+
+report = classification_report(y_test, y_predict)
+
+# Print the classification report
+print("Classification Report:")
+print(report)
+
+svm_classifier = svm.SVC(kernel='linear')
+
+svm_classifier.fit(X_train, y_train)
+
+y_pred = svm_classifier.predict(X_test)
+
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy:", accuracy)
+
+conf_matrix = confusion_matrix(y_test, y_pred)
+print("Confusion Matrix:")
+print(conf_matrix)
+
+classification_rep = classification_report(y_test, y_pred)
+print("Classification Report:")
+print(classification_rep)
+
+knn = KNeighborsClassifier()
+knn.fit(X_train, y_train)
+
+knn.score(X_test,y_test)
+
+y_predict = knn.predict(X_test)
+
+matrix = confusion_matrix(y_test, y_predict)
+
+print("Confusion Matrix:")
+print(matrix)
+
+report = classification_report(y_test, y_predict)
+
+# Print the classification report
+print("Classification Report:")
+print(report)
+
+random_forest = RandomForestClassifier(n_estimators=13)
+random_forest.fit(X_train,y_train)
+
+random_forest.score(X_test,y_test)
+
+y_predict = random_forest.predict(X_test)
+
+matrix = confusion_matrix(y_test, y_predict)
+
+print("Confusion Matrix:")
+print(matrix)
+
+report = classification_report(y_test, y_predict)
+
+# Print the classification report
+print("Classification Report:")
+print(report)
+
+decision_tree = DecisionTreeClassifier()
+decision_tree.fit(X_train,y_train)
+
+decision_tree.score(X_test,y_test)
+
+y_predict = decision_tree.predict(X_test)
+
+matrix = confusion_matrix(y_test, y_predict)
+
+print("Confusion Matrix:")
+print(matrix)
+
+report = classification_report(y_test, y_predict)
+
+# Print the classification report
+print("Classification Report:")
+print(report)
+
+model_names = ['Logistic Regression', 'Naive Bayes',  'SVM', 'KNN', 'Random Forest', 'Decision Tree',]
+accuracy_scores = [48, 91, 91, 93, 97, 97]  
+, 
+data = {'Model': model_names, 'Accuracy Score': accuracy_scores}
+
+df = pd.DataFrame(data)
+
+colors = px.colors.qualitative.Pastel
+
+fig = px.bar(df, x='Model', y='Accuracy Score', text='Accuracy Score', 
+             title='Comparison of Model Accuracy', color='Model',
+             color_discrete_map={model: color for model, color in zip(model_names, colors)})
+
+fig.update_traces(texttemplate='%{text:.2f}%', textposition='outside')
+fig.update_layout(width=700, height=600)
+
+fig.show()
+
+def get_user_input():
+    gender = int(input("Gender (Male: 1, Female: 0): "))
+    age = int(input("Age: "))
+    print( "['Scientist =0','Doctor =1 ', 'Accountant =2', 'Teacher =3','Manager =4', 'Engineer = 5', 'Sales Representative =6', 'Lawyer =8','Salesperson =7','Software Engineer = 9', 'Nurse = 10']")   
+    occupation = int(input("Occupation (encoded): "))
+    sleep_duration = float(input("Sleep Duration (hours): "))
+    bmi_category = int(input("BMI Category (Underweight: 1, Normal: 2, Overweight: 3): "))
+    heart_rate = int(input("Heart Rate (bpm): "))
+    daily_steps = int(input("Daily Steps: "))
+    systolic_bp = int(input("Systolic Blood Pressure: "))
+    
+    return np.array([[gender, age, occupation, sleep_duration, bmi_category, heart_rate, daily_steps, systolic_bp]])
+  
+user_input = get_user_input()
+predicted_stress_level = random_forest.predict(user_input)
+print("Predicted Stress Level:", predicted_stress_level[0])
